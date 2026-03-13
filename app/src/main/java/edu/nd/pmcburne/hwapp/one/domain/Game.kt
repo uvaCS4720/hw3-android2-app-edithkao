@@ -34,14 +34,18 @@ data class Game(
 
 object GameMappers {
 
-    private val dateFormatter = DateTimeFormatter.ofPattern("MM-dd-yyyy", Locale.US)
+    private val dateDashFormatter = DateTimeFormatter.ofPattern("MM-dd-yyyy", Locale.US)
+    private val dateSlashFormatter = DateTimeFormatter.ofPattern("MM/dd/yyyy", Locale.US)
     private val timeFormatter = DateTimeFormatter.ofPattern("h:mm a", Locale.US)
 
     fun mapDateStringToLocalDate(date: String?): LocalDate {
-        return if (date.isNullOrBlank()) {
-            LocalDate.now()
-        } else {
-            LocalDate.parse(date, dateFormatter)
+        if (date.isNullOrBlank()) return LocalDate.now()
+
+        return runCatching { LocalDate.parse(date, dateDashFormatter) }.getOrElse {
+            runCatching { LocalDate.parse(date, dateSlashFormatter) }.getOrElse { _ ->
+                // Last resort: some endpoints may return ISO-8601 dates
+                LocalDate.parse(date)
+            }
         }
     }
 
